@@ -312,3 +312,16 @@ function saveSearchInLocalStorage () {
 	*/
 }
 
+//constructor
+function Favorites (id, description, url, language) {
+	this.id = id;
+	this.description = description;
+	this.url = url;
+	this.language = language;
+
+}
+
+function saveFavorite () {
+
+	
+}
