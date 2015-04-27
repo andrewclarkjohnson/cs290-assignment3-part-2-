@@ -1,5 +1,7 @@
 // window.alert("Hello Dere!");
 
+var favorites = null;
+
 
 
 window.onload = function getAPI () 
@@ -7,6 +9,8 @@ window.onload = function getAPI ()
 	update_gist_list();
 	//document.getElementsByName("num_pages")[0].onchange = function() {update_gist_list()};
 	document.getElementsByName("num_pages")[0].onchange = function() {update_gist_list()};
+	
+
 	document.getElementById("searchBtn").onclick = function() {
 		//var sT = document.getElementById("searchTextInput");
 		//console.log("~~~~~~~~~~~~~~~~~~~~~~~~~", sT);
@@ -26,6 +30,8 @@ window.onload = function getAPI ()
 	document.getElementsByName("languageTypes")[2].onchange = function() {update_gist_list()};
 	document.getElementsByName("languageTypes")[3].onchange = function() {update_gist_list()};
 
+	// SIDE LIST OF FAVORITES
+	
 	/*for (var k=0; k<document.getElementsByName("num_pages")[0].value; k++)
 	{
 		document.getElementsByName("addToFaves")[k].onchange = function() { addToFavorites(k) };
@@ -36,6 +42,15 @@ window.onload = function getAPI ()
 
 			function update_gist_list() 
 			{
+				var favoritesStr = localStorage.getItem('allFavorites');
+				if( favoritesStr === null ) {
+					favorites = {'faveGists':[]};
+					localStorage.setItem('allFavorites', JSON.stringify(favorites));
+				}
+				else {
+					favorites = JSON.parse(localStorage.getItem('allFavorites'));
+				}
+				console.log("***", favorites);
 				saveSearchInLocalStorage();
 				var searchInput ; 
 				//searchInput= localStorage.getItem("searchTerm");
@@ -98,6 +113,9 @@ window.onload = function getAPI ()
 							var numLanguageTypes = document.getElementsByName("languageTypes").length;
 							//console.log ("Num language types: ", numLanguageTypes);
 							
+							var addtoFav;
+							var thisID,thisInfo;
+
 							searchInput= localStorage.getItem("searchTerm");
 							if (searchInput == null) {searchInput=""; } // do I need this?
 							/*
@@ -114,7 +132,7 @@ window.onload = function getAPI ()
 							
 							for (i=0; i<gistInfo.length; i++)
 							{
-								console.log ("num_pages: ", gistInfo.length);
+								// console.log ("num_pages: ", gistInfo.length);
 								var gistDescription = gistInfo[i]["description"];
 								if (gistDescription == null || gistDescription == "") { gistDescription = "No description given"; }
 								listInfo = document.createTextNode(gistDescription);
@@ -138,11 +156,11 @@ window.onload = function getAPI ()
 												if((!filterByLanguage || document.getElementsByName("languageTypes")[j].checked == true) )
 												{
 													//console.log("Hello");
-													console.log("1.", searchInput.length);
-													console.log("2a.", gistDescription);
-													console.log("2b.", gistDescription.indexOf(searchInput));
-													console.log("3.", filterByLanguage);
-													console.log("4.", document.getElementsByName("languageTypes")[j].checked);
+													// console.log("1.", searchInput.length);
+													// console.log("2a.", gistDescription);
+													// console.log("2b.", gistDescription.indexOf(searchInput));
+													// console.log("3.", filterByLanguage);
+													// console.log("4.", document.getElementsByName("languageTypes")[j].checked);
 													if(searchInput.length==0 || gistDescription.indexOf(searchInput)>-1)
 													{
 														listElementStart = document.createElement("li");
@@ -161,20 +179,44 @@ window.onload = function getAPI ()
 											            listInfo = document.createTextNode('No Decription Entered')
 											        }
 											        */
-											        var addtoFav = document.createElement("input");
-											            addtoFav.onclick = function() { addFav(listFile[obj]); };
-											            addtoFav.value = " + "
-											            addtoFav.type = "button";
-											            addtoFav.className = "addLink";
-											            addtoFav.id = gistInfo[i].id;
-											            addtoFav.name = "addToFaves";
-											        var addtoFavLink = document.createTextNode(' + ');
+											        thisInfo = gistInfo[i].id;
+											        thisInfo +="~~:~~";
+											        thisInfo += gistDescription;
+											        thisInfo +="~~:~~";
+											        thisInfo +=gistInfo[i].url;
+											        //thisInfo +="~~:~~";
+											        //thisInfo +=gistInfo[i].language;
+											        var newButton ="<button onclick=\"saveFavorite(\'" + thisInfo + " \' ) \">  +</button>";
+											        addtoFav = document.createElement("span");
+											        addtoFav.innerHTML = newButton;
+											         
+														//addtoFav.innerHTML = ;
+/*
+var fbutton = document.createElement("button");
+fbutton.innerHTML = "+";
+fbutton.setAttribute("gistId", gist.id);
+fbutton.onclick = function(){
+	var gistId = this.getAttribute("gistId"); //this is what you have saved before
+	var toBeFavoredGist = findById(gistId);
+	//here you add the gist to your favorite list in the localStorage and remove it from the gist list and add it to favorite list
+}
+*/
+
+											            
+											            //addtoFav.value = " + "
+											            //addtoFav.type = "button";
+											            //addtoFav.className = "addLink";
+											            //addtoFav.setAttribute("gistId",thisID);
+											            //addtoFav.onclick = function() { saveFavorite(thisID.toString()); };
+											            //addtoFav.id = 'n'+i;
+											           // addtoFav.name = "addToFaves";
+											        // addtoFavLink = document.createTextNode(' + ');
 
 											        listElementStart.appendChild(rowLink);
 											        rowLink.appendChild(listInfo);
 
 											        listElementStart.appendChild(addtoFav);
-											        addtoFav.appendChild(addtoFavLink);
+											       // addtoFav.appendChild(addtoFavLink);
 
 											        listStart.appendChild(listElementStart);
 													}
@@ -191,7 +233,7 @@ window.onload = function getAPI ()
 											}
 											break; // used in case there are multiple files; we just look at first one
 										}
-										 console.log("--");
+										 // console.log("--");
 										
 									}
 								/*	
@@ -238,15 +280,186 @@ window.onload = function getAPI ()
 				req.open('GET', url, true);
 	//req.setRequestHeader("Content-type", "application/json",true);
 				req.send();
+
+				printFavorites();
 			};
+
+// document.getElementById("n0").onclick = function() {
+		
+// 		saveFavorite(0);
+		
+// 	};
+// 	saveFavorite(0);
+
+
 
 };
 
-function addButton ()
+
+function saveFavorite (id) {
+	console.log("?", id);
+	
+	var splitInfo = id.split("~~:~~");
+	var f_id = splitInfo[0];
+	var f_description = splitInfo[1];
+	var f_url = splitInfo[2];
+	var newFave = new Favorites (f_id, f_description, f_url);
+	addFavoriteToStorage (favorites, newFave); 
+	//update_gist_list();
+	// localStorage.setItem("gistidToSave", id);
+}
+
+//modified from example code from week 4 cs290
+function addFavoriteToStorage(favorites, newFave)
 {
+	console.log (favorites);
+	if(newFave instanceof Favorites) {
+		favorites.faveGists.push(newFave);
+		localStorage.setItem('allFavorites', JSON.stringify(favorites));
+
+		return true;
+	}
+	console.error ("Attempted to add incorrect element");
+	return false;
+}
+
+//constructor
+function Favorites (f_id, f_description, f_url) {
+	
+	this.id = f_id;
+	this.description = f_description;
+	this.url = f_url;
 
 }
 
+function deleteFavorite(key)
+{
+	// removes ALL - this is not what i want in the end
+	// localStorage.removeItem(0);
+	//localStorage.clear();
+	console.log ("+deleteFavorite++", favorites);
+	var i=0;
+	// http://stackoverflow.com/questions/28362404/how-to-delete-a-specific-item-object-in-localstorage
+	 var items = JSON.parse(localStorage.getItem("favorites"));
+	 console.log ("+deleteFavorite++", items);
+	 //var rebuild;
+	//localStorage.clear();
+	 items.forEach(function(thisFave) 
+	 {
+	 	console("$$",thisFave);
+	 	// if(thisFave.id != key)
+	 	// {
+	 	// 	favorites.faveGists.push(thisFave);
+	 	// 	localStorage.setItem('allFavorites',favorites);
+	 	// }
+
+	 });
+	
+	// for (var i= 0; i< items["faveGists"].length; i++)
+	// {
+	// 	var object = JSON.parse(items[i]);
+	// 	if(object.id == key)
+	// 	{
+	// 		items.splice(i,1);
+	// 		console.log("#####");
+	// 	}
+	// }
+
+	// items = JSON.stringify(object);
+	// localStorage.setItem("favorites", items);
+
+
+	// favorites.faveGists.forEach(function(thisFave) 
+	// {
+	// 	 console.log(key, "::", thisFave.id);
+	// 	 // var thisID=thisFave.id.toString();
+	// 	 // var key = key1.toString();
+	// 	 // console.log(key.length, "::", thisID.length);
+	// 	// console.log(i);
+	// 	if(thisFave.id === key)
+			
+	// 	{
+	// 		localStorage.removeItem(favorites.faveGists.thisFave);
+	// 		// localStorage.removeItem(favorites.faveGists[i]);
+	// 		console.log(favorites.faveGists[i]);
+	// 	}
+	// 	 console.log(i);
+	// 	i++;
+	// });
+}
+
+function printFavorites ()
+{
+	//var favorites = JSON.parse(localStorage.getItem('allFavorites'));
+	console.log ("+printFavorites++", favorites);
+	document.getElementById("favegistlistcontainer").innerHTML = "Favorites";
+	var gistList = document.getElementById("favegistlistcontainer");
+	console.log("printFavoties");
+	// if(favorites != null)
+	// {
+		console.log("printFavoties2");
+		var listStart = document.createElement("ol");
+
+		var listElementStart=document.createTextNode("");
+		//var previousFavorites = favorites.faveGists;
+		//if (previousFavorites !=null)
+		//{
+			//var Nfavorites = localStorage.getItem(favorites);
+		 	var removeFav;
+			favorites.faveGists.forEach(function(thisFave) {
+			var listElementStart = document.createElement('li');
+			var rowLink = document.createElement("a");
+			var fdesc= thisFave.description;
+			var furl = thisFave.url;
+			var fid = thisFave.id;
+
+			var listInfo = document.createTextNode(fdesc);
+			rowLink.href = furl;
+			rowLink.className = 'gitLink';
+			rowLink.target = "_blank";
+			
+			var newButton ="<button onclick=\"deleteFavorite(\'" + fid + "\' ) \">  - </button>";
+											        removeFav = document.createElement("span");
+											        removeFav.innerHTML = newButton;
+
+			//console.log (fg);
+			//listElementStart.innerHTML = "";
+			//listInfo = document.createTextNode(fdesc);
+			//li.appendChild(listInfo)
+			listElementStart.appendChild(rowLink);
+			rowLink.appendChild(listInfo);
+			//listElementStart.appendChild(listElementStart);
+			listStart.appendChild(listElementStart);
+			listElementStart.appendChild(removeFav);
+													// listElementStart.appendChild(rowLink);
+											  //       rowLink.appendChild(listInfo);
+
+											  //       listElementStart.appendChild(addtoFav);
+											  //      // addtoFav.appendChild(addtoFavLink);
+
+											  //       listStart.appendChild(listElementStart);
+		
+		});
+			
+		// for(var i=0; i<2; i++)
+		// {
+		// 	var li = document.createElement('li');
+		// 	var fg = localStorage.getItem("faveGists");
+		// 	console.log (fg);
+		// 	li.innerHTML = localStorage.getItem("Hello");
+		// 	//li.appendChild(listInfo)
+		// 	listStart.appendChild(li);
+		// }
+		// var listStart = document.createElement("ol");
+		// favorites.faveGists.forEach (function(s) {
+			
+		// }
+	
+		// );
+	gistList.appendChild(listStart);
+	// }
+	
+}
 
 function whatsInLocalStorage () {
 	
@@ -273,16 +486,6 @@ function addToFavorites(k) {
 							var listInfo=document.createTextNode("");
 }
 
-// function based off of CS290 week 4 class video 
-function addParametersToURL (parameters) {
-	var str = [];
-	for (var prop in parameters) {
-		var s=encodeURIComponent(prop) + "=" + encodeURIComponent(parameters[prop]);
-		str.push(s);
-	}
-
-
-}
 
 
 //these functions are outside onload function
@@ -312,16 +515,4 @@ function saveSearchInLocalStorage () {
 	*/
 }
 
-//constructor
-function Favorites (id, description, url, language) {
-	this.id = id;
-	this.description = description;
-	this.url = url;
-	this.language = language;
 
-}
-
-function saveFavorite () {
-
-	
-}
